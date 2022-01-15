@@ -1,0 +1,36 @@
+Issues:
+    Sending JSON Post Request
+        Error: Required request parameter 'recipe' for method parameter type Recipe is not present
+            Tried:
+                curl -X POST localhost:8081/recipe/add -H 'Content-Type: application/json' -d '{"name":"Beef Stew","prepTimeMinutes":20,"cookTimeMinutes":60,"servings":4}'
+                curl -X POST localhost:8081/recipe/add -H 'Content-Type: application/json' -d recipe='{"name":"Beef Stew","prepTimeMinutes":20,"cookTimeMinutes":60,"servings":4}'
+                curl -X POST localhost:8081/recipe/add -H 'Content-Type: application/json' -d 'recipe={"name":"Beef Stew","prepTimeMinutes":20,"cookTimeMinutes":60,"servings":4}'
+                curl -X POST localhost:8081/recipe/add -H 'Content-Type: application/json' -d '{"recipe":{"name":"Beef Stew","prepTimeMinutes":20,"cookTimeMinutes":60,"servings":4}}'
+            Fixed: Noticed that I was using @RequestParam instead of @RequestBody
+        New Error: It's basically upset I haven't given it an id
+            Turns out this error is happening on both RecipeController and IngredientController, not sure what I did to break IngredientController
+            Tried:
+                Removing many to many stuff
+                Removing id getters and setters
+            Going to look over old commits to see what might have changed, since this was working before
+            There was a typo in my Ingredient table name, FIXED
+            The new method in RecipeController is still broken
+            Commenting out the save function works to fix the error, for some reason an id is not being generated using this method
+            copyProperties must be overwriting the id then? This is not the case
+            The same issue happens when using the non-JSON method
+            The source of the issue is that I added @Column(name = "recipe_id") earlier for ids and now it is expecting both an "id" and "recipe_id", hopefully I can just manually remove the id column via cli
+            SOLVED!
+            
+
+    Many To Many Mapping
+        Warning: 
+            GenerationTarget encountered exception accepting command : Error executing DDL "alter table recipe_ingredient add constraint FKgu1oxq7mbcgkx5dah6o8geirh foreign key (recipe_id) references recipe (recipe_id)" via JDBC Statement
+            Caused by: java.sql.SQLException: Failed to add the foreign key constraint. Missing index for constraint 'FKgu1oxq7mbcgkx5dah6o8geirh' in the referenced table 'recipe'
+        Fixing the above issue solved this warning :)
+        Need to figure out how to add to joint table via PostMapping
+        Figured it out
+
+Common Curls:
+    curl localhost:8081/recipe/add -H 'Content-Type: application/json' -d '{"name":"Beef Stew","prepTimeMinutes":20,"cookTimeMinutes":60,"servings":4}'
+    curl localhost:8081/recipe/addstep -H 'Content-Type: application/json' -d '{"step":"The step.","recipeID":29}'
+    curl localhost:8081/recipe/addingredient -H 'Content-Type: application/json' -d '{"name":"eggs","amount":2,"unit":"large","recipeID":29}'
